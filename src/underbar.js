@@ -92,10 +92,10 @@
   _.reject = function(collection, test) {
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
-    var negation = function() {
+    var fail = function() {
       return !test.apply(this, arguments);
     };
-    return _.filter(collection, negation);
+    return _.filter(collection, fail);
   };
 
   // Produce a duplicate-free version of the array.
@@ -185,12 +185,36 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    var result = true; // it passes by default
+    if (iterator === undefined) { iterator = _.identity; }
+    return _.reduce(collection, function(result, item) {
+      if (result === false) {
+        return false;
+      } else {
+        if (iterator(item)) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }, result);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    if (iterator === undefined) { iterator = _.identity; }
+    // for 'some' to fail, every item has to fail the iterator
+    var fail = function() {
+      return !iterator.apply(this, arguments);
+    };
+    if (_.every(collection, fail)) {
+      return false;
+    } else {
+      return true;
+    }
+
   };
 
 
@@ -213,11 +237,30 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    var args = Array.prototype.slice.call(arguments);
+    obj = args.shift();
+    return _.unpack(obj, args, _.identity); // identity in this case returns true
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var args = Array.prototype.slice.call(arguments);
+    obj = args.shift();
+    return _.unpack(obj, args, function (o, k) { 
+      return !(k in o); 
+    });
+  };
+
+  _.unpack = function(obj, args, test) {
+    _.each(args, function (collection) {
+      _.each(collection, function(item, key) {
+        if (test(obj, key)) {
+          obj[key] = item;
+        }
+      });
+    });
+    return obj;
   };
 
 
@@ -261,6 +304,18 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var cached = {},
+        result;
+    return function() {
+      var query = JSON.stringify({'f': func, 'a': arguments});
+      if (!(query in cached)) {
+        result = func.apply(null, arguments);
+        cached[query] = result;
+      } else {
+        result = cached[query];
+      }
+      return result;
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -270,6 +325,13 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    if (arguments.length > 2) {
+      var args = Array.prototype.slice.call(arguments);
+      var method = args.shift(); // take out first parameter: the callback
+      wait = args.shift(); // take out the second parameter: wait time
+      func = method.apply(null, args); // new func = callback with arguments
+    }
+      setTimeout(func, wait);
   };
 
 
@@ -284,6 +346,13 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var copy = array.slice(),
+        results = [];
+    while (copy.length >= 1) {
+      var idx = Math.floor(Math.random() * copy.length);
+      results.push(copy.splice(idx,1)[0]);
+    }
+    return results;
   };
 
 
