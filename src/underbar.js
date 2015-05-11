@@ -352,6 +352,9 @@
       var idx = Math.floor(Math.random() * copy.length);
       results.push(copy.splice(idx,1)[0]);
     }
+    while (results===array) {
+        results = _.shuffle(results);
+    }
     return results;
   };
 
