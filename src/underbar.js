@@ -304,10 +304,10 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
-    var cached = {},
-        result;
+    var cached = {};
     return function() {
-      var query = JSON.stringify(arguments);
+      var query = JSON.stringify(arguments),
+          result;
       if (query in cached) {
         result = cached[query];
       } else {
