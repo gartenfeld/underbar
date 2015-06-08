@@ -307,12 +307,12 @@
     var cached = {},
         result;
     return function() {
-      var query = JSON.stringify({'f': func, 'a': arguments});
-      if (!(query in cached)) {
+      var query = JSON.stringify(arguments);
+      if (query in cached) {
+        result = cached[query];
+      } else {
         result = func.apply(null, arguments);
         cached[query] = result;
-      } else {
-        result = cached[query];
       }
       return result;
     };
@@ -353,7 +353,7 @@
       results.push(copy.splice(idx,1)[0]);
     }
     while (results===array) {
-        results = _.shuffle(results);
+      results = _.shuffle(results);
     }
     return results;
   };
